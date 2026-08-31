@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHANTOM HUB — Admin</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    background:#000000;
+    color:#f2f2f2;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height:100vh;
+  }
+
+  header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 30px;
+    border-bottom:1px solid #2a2a2a;
+  }
+
+  header .brand {
+    font-weight:bold;
+    font-size:18px;
+    letter-spacing:0.04em;
+  }
+
+  header .brand span {
+    color:#999999;
+    font-weight:normal;
+  }
+
+  main {
+    max-width:900px;
+    margin:0 auto;
+    padding:30px 20px;
+  }
+
+  #loginBox {
+    max-width:340px;
+    margin:80px auto;
+    border:1px solid #2a2a2a;
+    border-radius:10px;
+    padding:24px;
+  }
+
+  #loginBox h2 {
+    margin-bottom:16px;
+    font-size:16px;
+  }
+
+  .field { margin-bottom:14px; }
+
+  .field label {
+    display:block;
+    font-size:12px;
+    color:#999999;
+    margin-bottom:4px;
+  }
+
+  .field input {
+    width:100%;
+    background:#000000;
+    color:#ffffff;
+    border:1px solid #ffffff;
+    border-radius:6px;
+    padding:9px 10px;
+    font-size:13px;
+    outline:none;
+  }
+
+  button.primary {
+    width:100%;
+    background:#ffffff;
+    color:#000000;
+    border:none;
+    border-radius:8px;
+    padding:10px;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  button.primary:hover { background:#cccccc; }
+
+  #statusMsg {
+    font-size:12px;
+    color:#ff5555;
+    margin-top:10px;
+    min-height:14px;
+  }
+
+  #dashboard { display:none; }
+
+  .toolbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+
+  .toolbar h2 { font-size:16px; }
+
+  .toolbar button {
+    background:none;
+    border:1px solid #ffffff;
+    color:#ffffff;
+    border-radius:6px;
+    padding:7px 14px;
+    font-size:12px;
+    cursor:pointer;
+  }
+
+  .toolbar button:hover { background:#ffffff; color:#000000; }
+
+  table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+
+  th, td {
+    text-align:left;
+    padding:10px 8px;
+    border-bottom:1px solid #2a2a2a;
+  }
+
+  th {
+    color:#999999;
+    font-weight:normal;
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+
+  .badge {
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:10px;
+    font-size:11px;
+    border:1px solid #ffffff;
+  }
+
+  .badge.banned {
+    border-color:#ff5555;
+    color:#ff5555;
+  }
+
+  .badge.active {
+    border-color:#ffffff;
+    color:#ffffff;
+  }
+
+  .ban-btn {
+    background:none;
+    border:1px solid #ff5555;
+    color:#ff5555;
+    border-radius:6px;
+    padding:5px 10px;
+    font-size:11px;
+    cursor:pointer;
+  }
+
+  .ban-btn:hover { background:#ff5555; color:#000000; }
+
+  .unban-btn {
+    background:none;
+    border:1px solid #ffffff;
+    color:#ffffff;
+    border-radius:6px;
+    padding:5px 10px;
+    font-size:11px;
+    cursor:pointer;
+  }
+
+  .unban-btn:hover { background:#ffffff; color:#000000; }
+
+  .empty-msg {
+    text-align:center;
+    color:#999999;
+    padding:30px 0;
+    font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">PHANTOM HUB <span>· Admin</span></div>
+</header>
+
+<main>
+
+  <div id="loginBox">
+    <h2>Admin Login</h2>
+    <div class="field">
+      <label>Admin Key</label>
+      <input type="password" id="adminKeyInput" placeholder="Enter admin key">
+    </div>
+    <button class="primary" onclick="adminLogin()">Log In</button>
+    <div id="statusMsg"></div>
+  </div>
+
+  <div id="dashboard">
+    <div class="toolbar">
+      <h2>Verified Accounts</h2>
+      <div style="display:flex; gap:8px;">
+        <button onclick="loadAccounts()">Refresh</button>
+        <button onclick="adminLogout()">Log Out</button>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Roblox Username</th>
+          <th>Roblox ID</th>
+          <th>Verified</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="accountsBody"></tbody>
+    </table>
+    <div id="emptyMsg" class="empty-msg" style="display:none;">No verified accounts yet.</div>
+  </div>
+
+</main>
+
+<script>
+  // Set this to your deployed Worker URL — same one used in index.html.
+  const API_BASE = 'https://phantomhub-api.YOUR-SUBDOMAIN.workers.dev';
+
+  let adminToken = sessionStorage.getItem('phantom_admin_token') || null;
+
+  function setStatus(msg) {
+    document.getElementById('statusMsg').textContent = msg || '';
+  }
+
+  async function adminLogin() {
+    const key = document.getElementById('adminKeyInput').value.trim();
+    if (!key) { setStatus('Enter the admin key.'); return; }
+    setStatus('Checking...');
+    try {
+      const res = await fetch(API_BASE + '/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: key })
+      });
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.error || 'Login failed.'); return; }
+
+      adminToken = data.token;
+      sessionStorage.setItem('phantom_admin_token', adminToken);
+      showDashboard();
+    } catch (e) {
+      setStatus('Network error — try again.');
+    }
+  }
+
+  function adminLogout() {
+    adminToken = null;
+    sessionStorage.removeItem('phantom_admin_token');
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('adminKeyInput').value = '';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadAccounts();
+  }
+
+  async function loadAccounts() {
+    try {
+      const res = await fetch(API_BASE + '/api/admin/accounts', {
+        headers: { 'Authorization': 'Bearer ' + adminToken }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) adminLogout();
+        return;
+      }
+      renderAccounts(data.accounts || []);
+    } catch (e) {
+      // Worker unreachable — leave table as-is
+    }
+  }
+
+  function renderAccounts(accounts) {
+    const body = document.getElementById('accountsBody');
+    const emptyMsg = document.getElementById('emptyMsg');
+
+    if (accounts.length === 0) {
+      body.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    accounts.sort((a, b) => b.createdAt - a.createdAt);
+
+    body.innerHTML = accounts.map(acc => `
+      <tr>
+        <td>@${escapeHtml(acc.robloxUsername)}</td>
+        <td>${acc.robloxId}</td>
+        <td>${new Date(acc.createdAt).toLocaleDateString()}</td>
+        <td><span class="badge ${acc.banned ? 'banned' : 'active'}">${acc.banned ? 'Banned' : 'Active'}</span></td>
+        <td>
+          ${acc.banned
+            ? `<button class="unban-btn" onclick="toggleBan(${acc.robloxId}, false)">Unban</button>`
+            : `<button class="ban-btn" onclick="toggleBan(${acc.robloxId}, true)">Ban</button>`
+          }
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function toggleBan(robloxId, banned) {
+    try {
+      const res = await fetch(API_BASE + '/api/admin/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+        body: JSON.stringify({ robloxId, banned })
+      });
+      if (res.ok) loadAccounts();
+    } catch (e) {}
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  if (adminToken) showDashboard();
+</script>
+
+</body>
+</html>
