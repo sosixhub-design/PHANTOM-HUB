@@ -1,28 +1,7 @@
-# PHANTOM HUB — Worker config
-# Deploy with: wrangler deploy
-# (npm install -g wrangler, then wrangler login first)
-
-name = "phantomhub-api"
+name = "phantom-hub"
 main = "worker.js"
 compatibility_date = "2026-08-31"
 
-# 1. Create the KV namespace once:
-#      wrangler kv namespace create PHANTOM_KV
-#    It will print an "id". Paste it below.
 kv_namespaces = [
   { binding = "PHANTOM_KV", id = "1ac651dccb404ecf9f1bf332ed6fc5d8" }
 ]
-
-# 2. Set your secrets (never put these directly in this file):
-#      wrangler secret put TOKEN_SECRET
-#        -> paste any long random string, e.g. generate one at
-#           https://www.random.org/strings/ (32+ chars)
-#      wrangler secret put ADMIN_KEY
-#        -> the password you'll type into admin.html to log in
-
-# 3. Deploy:
-#      wrangler deploy
-#    This gives you a URL like:
-#      https://phantomhub-api.<your-subdomain>.workers.dev
-#    Put that URL into API_BASE at the top of the <script> in both
-#    index.html and admin.html.
