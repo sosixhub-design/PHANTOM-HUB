@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nav Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    outline: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  button:focus,
+  button:active {
+    outline: none;
+  }
+
+  body {
+    margin: 0;
+    background: #000000;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #000000;
+    border-bottom: 1px solid #ffffff;
+  }
+
+  .app-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffff;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 10px;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: 0.2s ease;
+  }
+
+  .nav-btn svg {
+    width: 26px;
+    height: 26px;
+    stroke: #ffffff;
+    fill: none;
+    stroke-width: 1.8;
+  }
+
+  .nav-btn:hover,
+  .nav-btn.active {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .nav-btn:hover svg,
+  .nav-btn.active svg {
+    stroke: #000000;
+  }
+
+  main {
+    padding: 30px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .page {
+    display: none;
+  }
+
+  .page.active {
+    display: block;
+  }
+
+  .home-top {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .search-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  .search-bar svg {
+    width: 18px;
+    height: 18px;
+    stroke: #ffffff;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  .search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .search-bar input::placeholder {
+    color: #999999;
+  }
+
+  /* Recently uploaded horizontal scroll row */
+  .recent-heading {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 4px 0 10px;
+    color: #ffffff;
+  }
+
+  .recent-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 22px;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff #000000;
+  }
+
+  .recent-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .recent-scroll::-webkit-scrollbar-thumb {
+    background: #ffffff;
+    border-radius: 3px;
+  }
+
+  .recent-card {
+    flex: 0 0 92px;
+    cursor: pointer;
+  }
+
+  .recent-card img {
+    width: 92px;
+    height: 92px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ffffff;
+    display: block;
+  }
+
+  .recent-card .recent-title {
+    font-size: 12px;
+    margin-top: 6px;
+    line-height: 1.3;
+    color: #ffffff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .recent-card .recent-meta {
+    font-size: 10px;
+    color: #999999;
+    margin-top: 3px;
+  }
+
+  /* Script cards */
+  .script-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .script-card {
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: 0.15s ease;
+  }
+
+  .script-card:hover {
+    background: #1a1a1a;
+  }
+
+  .script-card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .script-card .game-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: bold;
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+    padding: 2px 8px;
+    color: #ffffff;
+  }
+
+  .badge.free { border-color: #ffffff; color: #ffffff; }
+  .badge.paid { border-color: #ffcc00; color: #ffcc00; }
+  .badge.key  { border-color: #00ccff; color: #00ccff; }
+
+  .script-card .meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #999999;
+  }
+
+  .empty-msg {
+    color: #999999;
+    font-size: 13px;
+    text-align: center;
+    padding: 30px 0;
+  }
+
+  /* Slide-up upload panel */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 10;
+  }
+
+  .overlay.active {
+    display: block;
+  }
+
+  /* Script view popup */
+  .view-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translate(0, -50%) scale(0.9);
+    background: #000000;
+    border: 2px solid #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+    margin: 0 auto;
+    z-index: 11;
+    max-height: 80vh;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s ease;
+  }
+
+  .view-panel.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(0, -50%) scale(1);
+  }
+
+  .view-panel h3 {
+    margin-top: 0;
+    color: #ffffff;
+  }
+
+  .view-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: #999999;
+    margin-bottom: 12px;
+  }
+
+  .view-code {
+    background: #050505;
+    border: 1px solid #ffffff;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .close-btn {
+    margin-top: 14px;
+    width: 100%;
+    background: none;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .close-btn:hover {
+    background: #ffffff;
+    color: #000000;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="app-name">PHANTOM HUB</span>
+
+  <div class="nav-links">
+    <button class="nav-btn" data-page="home" onclick="showPage('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </button>
+
+    <button class="nav-btn" data-page="info" onclick="showPage('info')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
+      Info
+    </button>
+  </div>
+</nav>
+
+<main>
+
+  <section id="home" class="page">
+    <div class="home-top">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search scripts..." oninput="renderRecentScripts()">
+      </div>
+    </div>
+
+    <div class="recent-heading">Recently Uploaded</div>
+    <div class="recent-scroll" id="recentScroll"></div>
+  </section>
+
+  <section id="info" class="page">
+    <h1>Info</h1>
+    <p>PHANTOM HUB lists scripts added by the team. Uploading is handled separately on the admin side.</p>
+  </section>
+
+</main>
+
+<!-- Overlay used by the script view popup -->
+<div class="overlay" id="overlay" onclick="closeView()"></div>
+
+<!-- Script view popup -->
+<div class="view-panel" id="viewPanel">
+  <h3 id="viewGame"></h3>
+  <div class="view-meta">
+    <span id="viewUser"></span>
+    <span id="viewType"></span>
+    <span id="viewViews"></span>
+  </div>
+  <img id="viewImage" src="" style="display:none; width:100%; max-height:200px; object-fit:cover; border:1px solid #ffffff; border-radius:6px; margin-bottom:12px;">
+  <div class="view-code" id="viewCode"></div>
+  <div style="display:flex; gap:8px; margin-top:10px;">
+    <button class="close-btn" id="viewCopyBtn" onclick="copyViewScript()" style="border-color:#ffffff; padding:5px; font-size:12px; flex:1;">Copy Script</button>
+    <button class="close-btn" onclick="closeView()" style="padding:5px; font-size:12px; flex:1;">Close</button>
+  </div>
+</div>
+
+<script>
+  // Script list — will be populated from the admin-managed source once that's wired up.
+  let scripts = [];
+
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector('.nav-btn[data-page="' + id + '"]').classList.add('active');
+  }
+
+  function copyViewScript() {
+    const text = document.getElementById('viewCode').textContent;
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    const btn = document.getElementById('viewCopyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  }
+
+  function renderRecentScripts() {
+    const row = document.getElementById('recentScroll');
+    if (!row) return;
+
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = scripts.filter(s =>
+      s.game.toLowerCase().includes(query) || s.username.toLowerCase().includes(query)
+    );
+    // Show top 10 most recent by default; a search shows every match.
+    const visible = query ? filtered : filtered.slice(0, 10);
+
+    if (visible.length === 0) {
+      row.innerHTML = '<div class="empty-msg" style="padding:10px 0;">No scripts found.</div>';
+      return;
+    }
+
+    row.innerHTML = visible.map(s => `
+      <div class="recent-card" onclick="viewScript(${s.id})">
+        ${s.image ? `<img src="${s.image}" alt="${escapeHtml(s.game)}">` : ''}
+        <div class="recent-title">${escapeHtml(s.game)}</div>
+        <div class="recent-meta">${s.type} · ${s.views} views</div>
+      </div>
+    `).join('');
+  }
+
+  function viewScript(id) {
+    const s = scripts.find(x => x.id === id);
+    if (!s) return;
+    s.views++; // update view count on every visit
+    renderRecentScripts();
+
+    document.getElementById('viewGame').textContent = s.game;
+    document.getElementById('viewUser').textContent = 'Made by ' + s.username;
+    document.getElementById('viewType').textContent = s.type;
+    document.getElementById('viewViews').textContent = s.views + ' views';
+    document.getElementById('viewCode').textContent = s.code;
+    const viewImg = document.getElementById('viewImage');
+    if (s.image) {
+      viewImg.src = s.image;
+      viewImg.style.display = 'block';
+    } else {
+      viewImg.style.display = 'none';
+      viewImg.src = '';
+    }
+    document.getElementById('overlay').classList.add('active');
+    document.getElementById('viewPanel').classList.add('active');
+  }
+
+  function closeView() {
+    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('viewPanel').classList.remove('active');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  showPage('home');
+  renderRecentScripts();
+</script>
+
+</body>
+</html>
