@@ -10,7 +10,7 @@ compatibility_date = "2026-08-31"
 #      wrangler kv namespace create PHANTOM_KV
 #    It will print an "id". Paste it below.
 kv_namespaces = [
-  { binding = "PHANTOM_KV", id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE" }
+  { binding = "PHANTOM_KV", id = "1ac651dccb404ecf9f1bf332ed6fc5d8" }
 ]
 
 # 2. Set your secrets (never put these directly in this file):
