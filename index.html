@@ -337,29 +337,6 @@
     background: #ffffff;
     color: #000000;
   }
-
-  .field {
-    margin-bottom: 14px;
-  }
-
-  .field label {
-    display: block;
-    font-size: 12px;
-    color: #999999;
-    margin-bottom: 4px;
-  }
-
-  .field input[type="text"] {
-    width: 100%;
-    background: #000000;
-    color: #ffffff;
-    border: 1px solid #ffffff;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 13px;
-    outline: none;
-    font-family: Arial, Helvetica, sans-serif;
-  }
 </style>
 </head>
 <body>
@@ -376,11 +353,6 @@
     <button class="nav-btn" data-page="info" onclick="showPage('info')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
       Info
-    </button>
-
-    <button class="nav-btn" id="accountNavBtn" onclick="openAccountPanel()">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      <span id="accountNavLabel">Account</span>
     </button>
   </div>
 </nav>
@@ -423,43 +395,6 @@
     <button class="close-btn" id="viewCopyBtn" onclick="copyViewScript()" style="border-color:#ffffff; padding:5px; font-size:12px; flex:1;">Copy Script</button>
     <button class="close-btn" onclick="closeView()" style="padding:5px; font-size:12px; flex:1;">Close</button>
   </div>
-</div>
-
-<!-- Account / Roblox verification panel -->
-<div class="overlay" id="accountOverlay" onclick="closeAccountPanel()"></div>
-<div class="view-panel" id="accountPanel">
-  <h3 id="accountTitle">Sign In / Verify</h3>
-
-  <div id="accountLoggedOut">
-    <p style="font-size:12px; color:#999999; margin-bottom:14px;">
-      Enter your Roblox username. We'll give you a code to paste into your Roblox
-      profile bio to prove it's really you — no password needed.
-    </p>
-
-    <div class="field">
-      <label>Roblox Username</label>
-      <input type="text" id="accountRobloxInput" placeholder="e.g. shadowdev">
-    </div>
-
-    <button class="close-btn" id="accountGetCodeBtn" onclick="startVerification()" style="width:100%; margin-bottom:10px;">Get Verification Code</button>
-
-    <div id="accountCodeBox" style="display:none; border:1px solid #ffffff; border-radius:8px; padding:12px; margin-bottom:10px;">
-      <div style="font-size:11px; color:#999999; margin-bottom:6px;">Paste this into your Roblox bio (About section):</div>
-      <div id="accountCodeText" style="font-family:monospace; font-size:15px; font-weight:bold; word-break:break-all;"></div>
-      <div id="accountCodeTimer" style="font-size:11px; color:#999999; margin-top:8px;"></div>
-    </div>
-
-    <button class="close-btn" id="accountVerifyBtn" onclick="completeVerification()" style="width:100%; display:none;">I've Added It — Verify</button>
-
-    <div id="accountStatus" style="font-size:12px; margin-top:10px; min-height:16px;"></div>
-  </div>
-
-  <div id="accountLoggedIn" style="display:none;">
-    <p style="font-size:14px; margin-bottom:14px;">Signed in as <strong id="accountUsernameDisplay"></strong></p>
-    <button class="close-btn" onclick="logoutAccount()" style="width:100%;">Sign Out</button>
-  </div>
-
-  <button class="close-btn" onclick="closeAccountPanel()" style="width:100%; margin-top:10px;">Close</button>
 </div>
 
 <script>
@@ -541,144 +476,6 @@
     div.textContent = str;
     return div.innerHTML;
   }
-
-  //====================================================
-  // ACCOUNT SYSTEM — Roblox bio verification
-  //====================================================
-
-  // Set this to your deployed Worker URL (see wrangler.toml notes).
-  const API_BASE = 'https://phantomhub-api.YOUR-SUBDOMAIN.workers.dev';
-
-  let codeCountdownTimer = null;
-  let currentSession = null; // { token, robloxUsername, robloxId }
-
-  function openAccountPanel() {
-    document.getElementById('accountOverlay').classList.add('active');
-    document.getElementById('accountPanel').classList.add('active');
-  }
-
-  function closeAccountPanel() {
-    document.getElementById('accountOverlay').classList.remove('active');
-    document.getElementById('accountPanel').classList.remove('active');
-  }
-
-  function setAccountStatus(msg, isError) {
-    const el = document.getElementById('accountStatus');
-    el.textContent = msg || '';
-    el.style.color = isError ? '#ff5555' : '#999999';
-  }
-
-  async function startVerification() {
-    const username = document.getElementById('accountRobloxInput').value.trim();
-    if (!username) {
-      setAccountStatus('Enter your Roblox username first.', true);
-      return;
-    }
-    setAccountStatus('Generating code...');
-    try {
-      const res = await fetch(API_BASE + '/api/verify-start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ robloxUsername: username })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAccountStatus(data.error || 'Something went wrong.', true);
-        return;
-      }
-
-      document.getElementById('accountCodeText').textContent = data.code;
-      document.getElementById('accountCodeBox').style.display = 'block';
-      document.getElementById('accountVerifyBtn').style.display = 'block';
-      setAccountStatus('Code generated. Paste it into your bio, then press Verify.');
-      startCodeCountdown(data.expiresInSeconds);
-    } catch (e) {
-      setAccountStatus('Network error — try again.', true);
-    }
-  }
-
-  function startCodeCountdown(seconds) {
-    clearInterval(codeCountdownTimer);
-    let remaining = seconds;
-    const timerEl = document.getElementById('accountCodeTimer');
-
-    function tick() {
-      const m = Math.floor(remaining / 60);
-      const s = remaining % 60;
-      timerEl.textContent = 'Expires in ' + m + ':' + String(s).padStart(2, '0');
-      if (remaining <= 0) {
-        clearInterval(codeCountdownTimer);
-        timerEl.textContent = 'Code expired — generate a new one.';
-        document.getElementById('accountVerifyBtn').style.display = 'none';
-      }
-      remaining--;
-    }
-    tick();
-    codeCountdownTimer = setInterval(tick, 1000);
-  }
-
-  async function completeVerification() {
-    const username = document.getElementById('accountRobloxInput').value.trim();
-    if (!username) return;
-    setAccountStatus('Checking your bio...');
-    try {
-      const res = await fetch(API_BASE + '/api/verify-complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ robloxUsername: username })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAccountStatus(data.error || 'Verification failed.', true);
-        return;
-      }
-      clearInterval(codeCountdownTimer);
-      localStorage.setItem('phantom_token', data.token);
-      applySession({ token: data.token, robloxUsername: data.robloxUsername, robloxId: data.robloxId });
-      setAccountStatus('');
-    } catch (e) {
-      setAccountStatus('Network error — try again.', true);
-    }
-  }
-
-  function applySession(session) {
-    currentSession = session;
-    document.getElementById('accountLoggedOut').style.display = 'none';
-    document.getElementById('accountLoggedIn').style.display = 'block';
-    document.getElementById('accountUsernameDisplay').textContent = '@' + session.robloxUsername;
-    document.getElementById('accountNavLabel').textContent = session.robloxUsername;
-  }
-
-  function logoutAccount() {
-    localStorage.removeItem('phantom_token');
-    currentSession = null;
-    document.getElementById('accountLoggedOut').style.display = 'block';
-    document.getElementById('accountLoggedIn').style.display = 'none';
-    document.getElementById('accountNavLabel').textContent = 'Account';
-    document.getElementById('accountCodeBox').style.display = 'none';
-    document.getElementById('accountVerifyBtn').style.display = 'none';
-    document.getElementById('accountRobloxInput').value = '';
-  }
-
-  async function restoreSession() {
-    const token = localStorage.getItem('phantom_token');
-    if (!token) return;
-    try {
-      const res = await fetch(API_BASE + '/api/me', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        applySession({ token, robloxUsername: data.robloxUsername, robloxId: data.robloxId });
-      } else {
-        localStorage.removeItem('phantom_token');
-      }
-    } catch (e) {
-      // offline or Worker unreachable — leave logged-out state, don't clear token
-    }
-  }
-
-  restoreSession();
 
   showPage('home');
   renderRecentScripts();
